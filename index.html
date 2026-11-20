@@ -1,0 +1,329 @@
+
+
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>HANASHIRU</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;background:#f5f6fa;color:#202638;font-family:-apple-system,sans-serif}
+
+header{background:#172642;color:white;text-align:center;padding:35px 15px}
+
+h1{letter-spacing:3px}
+
+header p{font-size:13px;color:#cdd7ec}
+
+main{max-width:600px;margin:auto;padding:20px}
+
+.card{background:white;border-radius:18px;padding:22px;margin-bottom:14px;box-shadow:0 3px 12px #0001}
+
+h2{color:#254e9b}
+
+p{line-height:1.7}
+
+button{background:#254e9b;color:white;border:0;border-radius:10px;padding:13px;margin:5px 0;font-size:15px}
+
+textarea{width:100%;height:120px;border:1px solid #ccd2df;border-radius:10px;padding:12px;font-size:16px}
+
+.page{display:none}
+
+.active{display:block}
+
+.back{background:#697386}
+
+.question{background:#eaf0ff;border-radius:12px;padding:18px}
+
+.entry{border-bottom:1px solid #ddd;padding:12px 0;white-space:pre-wrap}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>HANASHIRU</h1>
+
+<p>話すことで、自分を知る。</p>
+
+<p>他人と比べない。昨日までの自分と向き合う。</p>
+
+</header>
+
+<main>
+
+<section id="home" class="page active">
+
+<div class="card">
+
+<h2>TALK</h2>
+
+<p>情景を描く言葉のトレーニング</p>
+
+<button onclick="show('talk')">トレーニング開始</button>
+
+</div>
+
+<div class="card">
+
+<h2>REPORT</h2>
+
+<p>今日の出来事や学びを記録する</p>
+
+<button onclick="show('report')">記録する</button>
+
+</div>
+
+<div class="card">
+
+<h2>ENGINE</h2>
+
+<p>感情や思い込みを整理する</p>
+
+<button onclick="show('engine')">自分を知る</button>
+
+</div>
+
+<div class="card">
+
+<h2>GROWTH</h2>
+
+<p>過去の自分と今の自分を振り返る</p>
+
+<button onclick="show('growth')">成長を見る</button>
+
+</div>
+
+</section>
+
+<section id="talk" class="page">
+
+<button class="back" onclick="show('home')">← 戻る</button>
+
+<div class="card">
+
+<h2>TALK</h2>
+
+<div id="question" class="question"></div>
+
+<p>相手の頭に場面が浮かぶように説明してください。</p>
+
+<textarea id="talkText"></textarea>
+
+<button onclick="saveTalk()">回答を保存</button>
+
+<button onclick="nextQuestion()">次の問題</button>
+
+</div>
+
+</section>
+
+<section id="report" class="page">
+
+<button class="back" onclick="show('home')">← 戻る</button>
+
+<div class="card">
+
+<h2>REPORT</h2>
+
+<p>今日の出来事・気づき・明日につなげること</p>
+
+<textarea id="reportText"></textarea>
+
+<button onclick="save('REPORT','reportText')">保存</button>
+
+</div>
+
+</section>
+
+<section id="engine" class="page">
+
+<button class="back" onclick="show('home')">← 戻る</button>
+
+<div class="card">
+
+<h2>ENGINE</h2>
+
+<p>1. 出来事（事実）</p>
+
+<textarea id="fact"></textarea>
+
+<p>2. 感情とその奥の気持ち</p>
+
+<textarea id="feeling"></textarea>
+
+<p>3. 解釈・思い込み</p>
+
+<textarea id="belief"></textarea>
+
+<p>4. 気づいたこと</p>
+
+<textarea id="insight"></textarea>
+
+<button onclick="saveEngine()">保存</button>
+
+</div>
+
+</section>
+
+<section id="growth" class="page">
+
+<button class="back" onclick="show('home')">← 戻る</button>
+
+<div class="card">
+
+<h2>GROWTH</h2>
+
+<p>これまでの自分の記録</p>
+
+<div id="history"></div>
+
+</div>
+
+</section>
+
+</main>
+
+<script>
+
+const questions=[
+
+"通信速度が速くなると生活はどう変わる？",
+
+"通信費が安くなるメリットを家族の生活場面で伝えてください。",
+
+"疲れて帰宅した人に便利なサービスの価値を伝えてください。",
+
+"挑戦に不安を抱える人に未来の情景を伝えてください。",
+
+"サービス利用後のお客様の笑顔を想像できるように伝えてください。"
+
+];
+
+let qi=0;
+
+const $=id=>document.getElementById(id);
+
+function show(id){
+
+document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+
+$(id).classList.add('active');
+
+if(id==='growth')historyView();
+
+window.scrollTo(0,0);
+
+}
+
+function nextQuestion(){
+
+qi=(qi+1)%questions.length;
+
+$('question').textContent=questions[qi];
+
+$('talkText').value='';
+
+}
+
+function store(type,text){
+
+try{
+
+let data=JSON.parse(localStorage.getItem('hanashiru')||'[]');
+
+data.push({type,text,date:new Date().toLocaleString('ja-JP')});
+
+localStorage.setItem('hanashiru',JSON.stringify(data));
+
+alert('保存しました');
+
+}catch(e){alert('保存できませんでした');}
+
+}
+
+function save(type,id){
+
+let text=$(id).value.trim();
+
+if(!text)return alert('入力してください');
+
+store(type,text);
+
+$(id).value='';
+
+}
+
+function saveTalk(){
+
+let text=$('talkText').value.trim();
+
+if(!text)return alert('回答を入力してください');
+
+store('TALK',questions[qi]+'\n'+text);
+
+}
+
+function saveEngine(){
+
+let ids=['fact','feeling','belief','insight'];
+
+if(ids.every(id=>!$(id).value.trim()))return alert('入力してください');
+
+let text=ids.map((id,i)=>(i+1)+'. '+$(id).value.trim()).join('\n');
+
+store('ENGINE',text);
+
+ids.forEach(id=>$(id).value='');
+
+}
+
+function historyView(){
+
+let data=[];
+
+try{data=JSON.parse(localStorage.getItem('hanashiru')||'[]')}catch(e){}
+
+$('history').replaceChildren();
+
+if(!data.length){
+
+$('history').textContent='まだ記録がありません';
+
+return;
+
+}
+
+data.slice().reverse().forEach(item=>{
+
+let div=document.createElement('div');
+
+div.className='entry';
+
+div.textContent=item.type+'｜'+item.date+'\n'+item.text;
+
+$('history').appendChild(div);
+
+});
+
+}
+
+$('question').textContent=questions[0];
+
+</script>
+
+</body>
+
+</html>
